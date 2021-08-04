@@ -21,8 +21,8 @@ ESLint는 ECMAScript 코드에서 문제점을 검사하고 더 나은 코드로
 * 포맷팅
 * 코드 품질
 <br><br>
-<strong>포맷팅</storng> 일관된 코드 스타일을 유지하게 해준다. 예를 들어 "들여쓰기 규칙", "코드 라인의 최대 너비 규칙"등이 있다.<br>
-<strong>코드품질</storng>은 잠재적인 오류나 버그를 예방하기 위함이다.
+<strong>포맷팅</strong> 일관된 코드 스타일을 유지하게 해준다. 예를 들어 "들여쓰기 규칙", "코드 라인의 최대 너비 규칙"등이 있다.<br>
+<strong>코드품질</strong>은 잠재적인 오류나 버그를 예방하기 위함이다.
 
 ### 2.1 설치 및 사용법
 설치
@@ -224,3 +224,82 @@ Prettier는 이 두 패키지를 함께 사용하는 단순한 설정을 제공�
   ]
 }
 ```
+
+<br><br>
+
+## 5. 자동화
+Lint는 코딩할 때마다 수시로 실행이 되야하는데 이러한 일은 자동화 하는 것이 좋다.<br>
+"git 훅을 사용하는 방법"과 "에디터 확장 도구"를 사용하는 방법이 있다.
+
+### 5.1 변경한 내용만 검사
+소스 추적 도구로 git을 사용한다면 git 훅을 이용하는 것이 좋다.<br>
+커밋 전, 퓌 전 등 git 커맨드 실행 시점에 끼여들 수 있는 훅을 제공한다.<br>
+[husky](https://github.com/typicode/husky)는 git 훅을 쉽게 사용할 수 있는 도구이다.(Git 2.13.0 이상 버전을 지원)<br>
+커밋 메시지 작성전에 끼어들어 Lint로 코드 검사 작업을 추가하는것이 좋겠다.
+
+<br><br>
+설치
+```
+npm i -D husky
+```
+husky는 패키지 파일에 설정을 추가한다.
+```
+{
+  package.json:
+  "husky": {
+    "hooks": {
+      "pre-commit": "eslint app.js --fix"
+    }
+  }
+}
+```
+만약 Lint 수행 중 오류가 발견되면 commit은 취소된다.<br>
+Lint를 통과하게끔 코드를 수정해야만 commit을 할 수 있게 된 것이다.
+<br><br>
+한편, 코드가 점점 많아지면 커밋 작성이 느려질 수 있는데 커밋전에 모든 코드를 린트로 검사하는 시간이 소요되기 때문이다.<br>
+커밋시 변경된 파일만 린트로 검사하면 더 좋지 않을까? [lint-staged](https://github.com/okonet/lint-staged)는 변경된(스테이징된) 파일만 린트를 수행하는 도구다.
+설치
+```
+npm i -D lint-staged
+```
+패키지 파일에 설정을 추가한다.
+```
+{
+  package.json:
+  "lint-staged": {
+    "*.js": "eslint --fix"
+  }
+}
+```
+내용이 변경된 파일 중에 .js 확장자로 끝나는 파일만 린트로 코드 검사를 한다.<br>
+pre-commit 훅도 아래처럼 변경한다.
+<br>
+```
+package.json:
+{
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  }
+}
+```
+커밋 메세지 작성전에 lint-staged를 실행할 것이다. 이제 커밋하면 모든 파일을 검사하는 것이 아니라 변경되거나 추가된 파일만 검사한다. 커밋 과정이 훨씬 가벼워질 것이다.
+
+### 5.2 에디터 확장도구
+
+코딩할 때 실시간으로 검사하는 방법도 있다<br>
+vs-code의 ESLint와 Prettier 익스텐션이 그러한 기능을 제공한다.<br>
+위에서 Prettier 규칙을 ESLint와 통합하였기에 ESLint 익스텐션만 사용하면된다.
+<br><br>
+설치하면 자동으로 ESLint 설정파일을 읽고 파일을 검사한다.<br><br>
+에디터 설정중 저장시 액션을 추가할 수 있는데 ESLint로 코드를 정정할 수 있다.
+```
+.vscode/settings.json:
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  }
+}
+```
+이렇게 ESLint 익스텐션으로 실시간 코드 품질 검사를 하고 저장시 자동 포메팅을 하도록 하면 실시간으로 코드 품질을 검사하고 포맷도 일관적으로 유지할 수 있다.
