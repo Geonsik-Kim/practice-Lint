@@ -1,6 +1,9 @@
-// .eslintrc.js
 module.exports = {
-    rules: {
-      "no-extra-semi": "error",
+    env: {
+        node: true
     },
+    extends: [
+        "eslint:recommended",
+        "plugin:prettier/recommended"
+      ]
   }

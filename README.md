@@ -108,3 +108,119 @@ npx eslint --init
 ? What format do you want your config file to be in?
 ```
 대화식 명령어로 진행되는데 모듈 시스템을 사용하는지, 어떤 프레임웍을 사용하는지, 어플리케이션이 어떤 환경에서 동작하는지 등에 답하면 된다. 답변에 따라 .eslintrc 파일을 자동으로 만들 수 있다.
+<br><br>
+## 3. Prettier
+Prettier는 코드를 "더" 예쁘게 만들어준다.<br>
+ESLint의 포매팅과 겹치는 부분이 있지만 Prettier는 좀 더 일관적인 스타일로 코드를 다듬어준다.<br>
+반면 코드품질과 관련된 기능은 하지 않는 것이 ESLint와 다른 점이다.<br><br>
+### 3.1 설치 및 사용법
+설치
+```
+npm i -D prettier
+```
+검사 대상 파일
+```
+// app.js:
+console.log("hello world")
+```
+검사
+```
+npx prettier app.js --write
+```
+"--write" 옵션을 추가하면 파일을 재작성한다. 그렇지 않을 경우 결과를 터미널에 출력한다.<br>
+변경된 모습을 보면
+```
+// app.js
+console.log("Hello world")
+```
+작은 따옴표를 큰 따옴표로 변경하고 문장 뒤에 세미콜론이 추가 되었다.<br>
+ESLint와 달리 규칙이 미리 세팅 되어 있기 때문에 설정없이 바로 사용이 가능하다.
+
+### 3.2 포매팅(더 예쁘게)
+```
+// app.js
+console.log("----------------매 우 긴 문 장 입 니 다 80자가 넘 는 코 드 입 니 다.----------------")
+```
+위 같은 경우 ESLint는 [max-len](https://eslint.org/docs/rules/max-len) 규칙을 이용해 코드를 검사하고 결과를 알려줄 뿐 수정은 개발자의 몫이다.<br>
+반면 Prettier는 어떻게 수정해야하는 지 알고 있기 때문에 아래처럼 코드를 다시 작성한다.
+```
+// app.js
+console.log(
+  "----------------매 우 긴 문 장 입 니 다 80자가 넘 는 코 드 입 니 다.----------------"
+);
+```
+
+## 4. ESLint와 Prettier 통합하기
+포맷팅은 간편한 Prettier에게 맡기더라도 코드품질과 관련된 검사는 ESLint의 몫이다.<br>
+따라서 이 둘을 같이 사용한다면 최선의 방법일 것이다.<br>
+Prettier는 이러한 ESLint와 통합 방법을 제공한다.<br>
+[eslint-config-prettier](https://github.com/prettier/eslint-config-prettier)는 Prettier와 충돌하는 ESLint 규칙을 끄는 역할을 한다. 둘다 사용하는 경우 규칙이 충돌하기 때문이다.
+<br><br>
+설치
+```
+npm i -D eslint-config-prettier
+```
+설정파일의 extends 배열에 추가한다.
+```
+// .eslintrc.js
+{
+  extends: [
+    "eslint:recommended",
+    "eslint-config-prettier"
+  ]
+}
+```
+예를 들어 ESLint는 중복 세미콜론 사용을 검사한다. 이것은 Prettier도 마찬가지다.<br>
+따라서 어느 한쪽에서는 규칙을 꺼야하는데 eslint-config-prettier를 extends 하면 중복되는 ESLint 규칙을 비활성화 한다.
+```
+var foo = "" // 사용하지 않은 변수. ESLint가 검사
+console.log();; // 중복 세미콜론 사용. 프리티어가 자동 수정
+```
+ESLint는 중복된 포매팅 규칙을 Prettier에게 맡기고 나머지 코드품질에 관한 검사만 한다.<br>
+따라서 아래처럼 두 개를 동시에 실행해서 코드를 검사한다.
+```
+npx prettier app.js --write && npx eslint app.js --fix
+
+1:5  error  'foo' is assigned a value but never used  no-unused-vars
+
+✖ 1 problem (1 error, 0 warnings)
+```
+Prettier에 의해 코드가 아래와 같이 포매팅 되었고
+```
+var foo = ""
+console.log();
+```
+ESlint에 의해 코드품질과 관련된 오류(no-unused-vars)를 리포팅한다.
+<br><br>
+한편, [eslint-plugin-prettier](https://github.com/prettier/eslint-plugin-prettier)는 Prettier 규칙을 ESLint 규칙으로 추가하는 플러그인이다. 프리티어의 모든 규칙이 ESLint로 들어오기 때문에 ESLint만 실행하면 된다.<br>
+패키지를 설치하고
+```
+npm i -D eslint-plugin-prettier
+```
+설정 파일에서 pulugins와 rules에 설정을 추가한다.
+```
+// .eslintrc.js
+{
+  plugins: [
+    "prettier"
+  ],
+  rules: {
+    "prettier/prettier": "error"
+  },
+}
+```
+Prettier의 모든 규칙을 ESLint 규칙으로 가져온 설정이다.<br>
+이제는 ESLint만 실행해도 Prettier의 포매팅 기능을 사용할 수 있다.
+```
+npx eslint app.js --fix
+```
+Prettier는 이 두 패키지를 함께 사용하는 단순한 설정을 제공한다.
+```
+// .eslintrc.js
+{
+  "extends": [
+    "eslint:recommended",
+    "plugin:prettier/recommended"
+  ]
+}
+```
